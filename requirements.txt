@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-dotenv
+langchain
+langchain-openai
+langchain-pinecone
+pinecone-client
+openai
+pypdf
+pydantic
+websockets
+sqlalchemy
+psycopg2-binary
