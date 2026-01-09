@@ -15,11 +15,7 @@ GRIEVANCE_TOOL = {
     "type": "function",
     "function": {
         "name": "register_grievance",
-        "description": (
-            "Use this ONLY after the citizen has clearly confirmed that they want to "
-            "register a formal grievance AND has explicitly provided their name, issue, "
-            "and department."
-        ),
+        "description": "Register a formal citizen grievance after explicit confirmation.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -47,10 +43,25 @@ GRIEVANCE_TOOL = {
 }
 
 
-async def get_ai_response(user_query: str, context: str):
-    """
-    Generates a voice-optimized assistant response and optional tool call.
-    """
+async def get_ai_response(
+    user_query: str,
+    context: str,
+    user_confirmed: bool
+):
+    confirmation_block = (
+        """
+THE USER HAS CONFIRMED.
+You may call the register_grievance tool IF all required details are present.
+DO NOT ask for confirmation again.
+"""
+        if user_confirmed
+        else
+        """
+THE USER HAS NOT CONFIRMED YET.
+DO NOT call the register_grievance tool.
+If details are complete, ask for confirmation politely.
+"""
+    )
 
     system_prompt = f"""
 ROLE:
@@ -59,24 +70,17 @@ You are "Vani", the official AI Voice Assistant for the Government of NCT of Del
 CONTEXT FROM OFFICIAL DOCUMENTS:
 {context}
 
-VOICE RULES (VERY IMPORTANT):
-- Max 2 short sentences per response.
-- No bullet points.
-- No long explanations.
-- Speak clearly and politely.
+VOICE RULES:
+- Max 2 short sentences
+- Clear and polite
+- No bullet points
 
-CRITICAL OPERATIONAL RULES:
-1. NEVER assume or invent the citizen's name.
-2. NEVER call the register_grievance tool unless the citizen has:
-   a) Explicitly said they want to register a complaint, AND
-   b) Clearly provided their name, AND
-   c) Clearly described the issue.
-3. If any required detail is missing, ASK ONE QUESTION AT A TIME.
-4. Before calling the tool, always ask:
-   "Shall I go ahead and register this complaint for you?"
-5. If the citizen agrees, THEN call the tool.
+CRITICAL RULES:
+1. Never assume the citizen's name
+2. Ask only one missing detail at a time
+3. Never invent information
 
-If the citizen is only asking for information, DO NOT call any tool.
+{confirmation_block}
 """
 
     response = await client.chat.completions.create(
@@ -86,13 +90,25 @@ If the citizen is only asking for information, DO NOT call any tool.
             {"role": "user", "content": user_query}
         ],
         tools=[GRIEVANCE_TOOL],
-        tool_choice="auto"
+        tool_choice="auto",
+        temperature=0.3
     )
 
     msg = response.choices[0].message
 
-    return {
-    "content": msg.content if isinstance(msg.content, str) else "",
-    "tool_calls": msg.tool_calls or []
-    }
+    spoken_text = msg.content if isinstance(msg.content, str) else ""
+    if not spoken_text.strip():
+        spoken_text = "Please tell me your name and describe your complaint."
 
+    tool_calls = []
+    if msg.tool_calls:
+        for t in msg.tool_calls:
+            tool_calls.append({
+                "name": t.function.name,
+                "arguments": t.function.arguments
+            })
+
+    return {
+        "content": spoken_text,
+        "tool_calls": tool_calls
+    }
