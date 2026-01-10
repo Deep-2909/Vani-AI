@@ -13,6 +13,8 @@ from app.ws import manager
 from app.db import engine
 from app.models.grievance import Base
 
+from app.api.manager import router as manager_router
+
 app = FastAPI(title="Delhi Grievance AI Backend")
 
 # 🌐 Fix 1: Comprehensive CORS for HTTP
@@ -31,6 +33,7 @@ app.add_middleware(
 app.include_router(api_router)
 app.include_router(vapi_router)
 app.include_router(retell_router) # This connects your /llm-websocket path
+app.include_router(manager_router)
 
 @app.get("/")
 def home():
