@@ -42,12 +42,15 @@ GRIEVANCE_TOOL = {
     }
 }
 
-
 async def get_ai_response(
-    user_query: str,
+    messages: list, 
     context: str,
     user_confirmed: bool
 ):
+    # 1. CLEAN HISTORY: Remove any existing 'system' messages provided by Vapi 
+    # to prevent transcript stacking/repetition.
+    clean_messages = [m for m in messages if m.get("role") != "system"]
+
     confirmation_block = (
         """
 THE USER HAS CONFIRMED.
@@ -71,33 +74,36 @@ CONTEXT FROM OFFICIAL DOCUMENTS:
 {context}
 
 VOICE RULES:
-- Max 2 short sentences
-- Clear and polite
-- No bullet points
+- Max 2 short, simple sentences.
+- Clear and polite.
+- No bullet points or special characters.
 
 CRITICAL RULES:
-1. Never assume the citizen's name
-2. Ask only one missing detail at a time
-3. Never invent information
+1. Never assume the citizen's name.
+2. Ask only one missing detail at a time.
+3. Never invent information.
 
 {confirmation_block}
 """
 
+    # 2. Add the NEW system prompt at the beginning of the cleaned history
+    full_messages = [{"role": "system", "content": system_prompt}] + clean_messages
+
     response = await client.chat.completions.create(
         model="gpt-4o",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_query}
-        ],
+        messages=full_messages,
         tools=[GRIEVANCE_TOOL],
         tool_choice="auto",
-        temperature=0.3
+        temperature=0.1 # Lower temperature improves TTS stability
     )
 
     msg = response.choices[0].message
 
-    spoken_text = msg.content if isinstance(msg.content, str) else ""
-    if not spoken_text.strip():
+    spoken_text = ""
+    if isinstance(msg.content, str):
+        spoken_text = msg.content.strip()
+
+    if not spoken_text:
         spoken_text = "Please tell me your name and describe your complaint."
 
     tool_calls = []

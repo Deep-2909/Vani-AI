@@ -1,37 +1,53 @@
 import os
 import asyncio
-from langchain_pinecone import PineconeVectorStore
+from pinecone import Pinecone
 from langchain_openai import OpenAIEmbeddings
+
 
 class RAGService:
     def __init__(self):
-        self.vectorstore = PineconeVectorStore(
-            index_name=os.getenv("PINECONE_INDEX_NAME"),
-            embedding=OpenAIEmbeddings(model="text-embedding-3-small")
+        # Initialize Pinecone client
+        self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+        self.index = self.pc.Index(os.getenv("PINECONE_INDEX_NAME"))
+
+        # Embeddings (same model as ingestion)
+        self.embeddings = OpenAIEmbeddings(
+            model="text-embedding-3-small"
         )
 
     async def get_context(self, query: str, department: str | None = None):
         """
         Retrieves concise, relevant context for voice responses.
+        Functionality preserved exactly as before.
         """
         try:
-            # Run blocking Pinecone call in thread pool
-            docs = await asyncio.to_thread(
-                self.vectorstore.similarity_search,
-                query,
-                3
+            # Create query embedding (run sync code in thread)
+            query_embedding = await asyncio.to_thread(
+                self.embeddings.embed_query,
+                query
             )
 
-            if not docs:
+            # Query Pinecone (run sync call in thread)
+            results = await asyncio.to_thread(
+                self.index.query,
+                vector=query_embedding,
+                top_k=3,
+                include_metadata=True
+            )
+
+            matches = results.get("matches", [])
+            if not matches:
                 return ""
 
-            # Trim context for voice (important)
+            # Trim context for voice (IMPORTANT – preserved)
             context_chunks = []
             total_chars = 0
             MAX_CHARS = 1200  # ~400 tokens
 
-            for doc in docs:
-                text = doc.page_content.strip()
+            for match in matches:
+                metadata = match.get("metadata", {})
+                text = metadata.get("text", "").strip()
+
                 if not text:
                     continue
 
