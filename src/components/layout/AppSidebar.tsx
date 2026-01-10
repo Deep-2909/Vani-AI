@@ -1,19 +1,22 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  PhoneCall, 
-  BookOpen, 
+import {
+  LayoutDashboard,
+  PhoneCall,
+  BookOpen,
   Settings,
   Mic,
-  Radio
+  Radio,
+  ListOrdered,
+  Database
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/call-logs", icon: PhoneCall, label: "Call Logs" },
+  { to: "/calling-list", icon: ListOrdered, label: "Calling List" },
+  { to: "/databases", icon: Database, label: "Databases" },
   { to: "/knowledge-base", icon: BookOpen, label: "Knowledge Base" },
-  { to: "/settings", icon: Settings, label: "Settings" },
+  { to: "/call-logs", icon: PhoneCall, label: "Call Logs" },
 ];
 
 export function AppSidebar() {
@@ -28,7 +31,7 @@ export function AppSidebar() {
             <Mic className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-semibold text-foreground">VoiceAI</h1>
+            <h1 className="font-semibold text-foreground">Voice AI</h1>
             <p className="text-xs text-muted-foreground">Command Center</p>
           </div>
         </div>

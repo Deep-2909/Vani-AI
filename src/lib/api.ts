@@ -46,6 +46,7 @@ export interface Call {
   outcome: 'resolved' | 'escalated' | 'dropped' | 'voicemail';
   timestamp: string;
   transcript?: string;
+  summary?: string;
   sentiment?: number; // 0-100
   recordingUrl?: string;
 }
@@ -157,7 +158,17 @@ export async function triggerSync(): Promise<ApiResponse<{ success: boolean }>> 
 export function generateMockCalls(count: number): Call[] {
   const outcomes: Call['outcome'][] = ['resolved', 'escalated', 'dropped', 'voicemail'];
   const types: Call['type'][] = ['inbound', 'outbound'];
-  
+  const summaries = [
+    'Customer inquired about water supply issues in their area. Provided information about scheduled maintenance and expected restoration time. Issue marked as resolved.',
+    'Complaint about road maintenance and potholes. Customer expressed concerns about safety. Escalated to relevant department for immediate action.',
+    'Query regarding government schemes eligibility. Explained application process and required documents. Customer satisfied with the information provided.',
+    'Report of streetlight malfunction in residential area. Logged complaint and provided ticket number. Expected resolution within 48 hours.',
+    'Request for property tax payment details. Guided customer through online payment portal and answered questions about payment methods.',
+    'Feedback about recent civic improvements. Customer appreciated the work done. Forwarded positive feedback to concerned department.',
+    'Emergency report of water pipeline burst. Immediately dispatched repair team. Kept customer informed about repair progress.',
+    'Inquiry about building permit application status. Checked system and provided current status. Explained next steps in the approval process.',
+  ];
+
   return Array.from({ length: count }, (_, i) => ({
     id: `call-${i + 1}`,
     callerId: `+1${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
@@ -165,6 +176,7 @@ export function generateMockCalls(count: number): Call[] {
     duration: Math.floor(Math.random() * 600) + 30,
     outcome: outcomes[Math.floor(Math.random() * outcomes.length)],
     timestamp: new Date(Date.now() - Math.random() * 86400000 * 7).toISOString(),
+    summary: summaries[Math.floor(Math.random() * summaries.length)],
     sentiment: Math.floor(Math.random() * 100),
     recordingUrl: `https://storage.example.com/recordings/call-${i + 1}.mp3`,
   }));

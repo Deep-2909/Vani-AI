@@ -1,126 +1,234 @@
-import { motion } from "framer-motion";
-import { BookOpen, FileText, Search, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { FileUploadZone } from "@/components/knowledge-base/FileUploadZone";
-import { SyncStatusIndicator } from "@/components/knowledge-base/SyncStatusIndicator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Search, Plus, FileText, Upload, Loader2 } from "lucide-react";
+import { getMockDocuments, Document } from "@/lib/knowledge-base-api";
+import { toast } from "sonner";
 
-const mockDocuments = [
-  { id: "1", name: "Product Manual v2.1.pdf", size: "2.4 MB", vectors: 1247, uploadedAt: "2 days ago" },
-  { id: "2", name: "FAQ Database.docx", size: "856 KB", vectors: 523, uploadedAt: "1 week ago" },
-  { id: "3", name: "Troubleshooting Guide.pdf", size: "5.1 MB", vectors: 2891, uploadedAt: "2 weeks ago" },
-  { id: "4", name: "Customer Scripts.txt", size: "124 KB", vectors: 89, uploadedAt: "3 weeks ago" },
-  { id: "5", name: "Return Policy 2024.pdf", size: "312 KB", vectors: 156, uploadedAt: "1 month ago" },
-];
+const KnowledgeBase = () => {
+  const [documents, setDocuments] = useState<Document[]>(getMockDocuments());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
-export default function KnowledgeBase() {
+  const filteredDocuments = documents.filter((doc) =>
+    doc.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setUploadedFiles(files);
+  };
+
+  const handleSync = async () => {
+    if (uploadedFiles.length === 0) return;
+
+    setIsUploading(true);
+
+    // Simulate upload and processing
+    setTimeout(() => {
+      const newDocs: Document[] = uploadedFiles.map((file, index) => ({
+        id: `doc-${documents.length + index + 1}`,
+        name: file.name,
+        type: file.name.split(".").pop() as "pdf" | "doc" | "txt" | "xlsx",
+        uploadedDate: new Date().toLocaleDateString("en-US"),
+        size: file.size,
+        vectorized: true,
+      }));
+
+      setDocuments([...documents, ...newDocs]);
+      setIsUploading(false);
+      setIsUploadDialogOpen(false);
+      setUploadedFiles([]);
+      toast.success(`Successfully synced ${uploadedFiles.length} document(s)`);
+    }, 2000);
+  };
+
+  const getFileIcon = (type: string) => {
+    return <FileText className="w-8 h-8 text-primary" />;
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Knowledge Base</h1>
-              <p className="text-muted-foreground">
-                Manage documents for RAG-powered responses
-              </p>
-            </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-primary">Knowledge Base</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Manage and preview documents used by Sahayaki for AI reference
+            </p>
           </div>
-        </motion.div>
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Upload Section */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-2 glass-card-elevated p-6"
-          >
-            <h3 className="font-semibold text-foreground mb-4">Upload Documents</h3>
-            <FileUploadZone />
-          </motion.div>
-
-          {/* Sync Status */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <SyncStatusIndicator />
-          </motion.div>
+          <Button onClick={() => setIsUploadDialogOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Sync New Documents
+          </Button>
         </div>
 
-        {/* Documents List */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="glass-card-elevated"
-        >
-          <div className="p-6 border-b border-border flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h3 className="font-semibold text-foreground">Indexed Documents</h3>
-              <p className="text-sm text-muted-foreground">
-                {mockDocuments.length} documents in knowledge base
-              </p>
-            </div>
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Input
+            placeholder="Search documents by name or file type..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-background border-border h-12 text-base"
+          />
+        </div>
 
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search documents..."
-                className="pl-10 bg-muted/30 border-border"
-              />
-            </div>
-          </div>
-
-          <div className="divide-y divide-border">
-            {mockDocuments.map((doc, index) => (
-              <motion.div
+        {/* Documents Grid */}
+        {filteredDocuments.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {filteredDocuments.map((doc) => (
+              <Card
                 key={doc.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.05 }}
-                className="p-4 flex items-center justify-between hover:bg-muted/20 transition-colors"
+                className="glass-card p-6 hover:border-primary/50 transition-all cursor-pointer group"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-primary" />
+                <div className="flex flex-col items-center text-center space-y-3">
+                  {/* File Icon */}
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    {getFileIcon(doc.type)}
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">{doc.name}</p>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <span>{doc.size}</span>
+
+                  {/* File Name */}
+                  <div className="w-full">
+                    <h3 className="font-medium text-foreground text-sm line-clamp-2 mb-2">
+                      {doc.name}
+                    </h3>
+                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <span className="uppercase font-semibold">{doc.type}</span>
                       <span>•</span>
-                      <span>{doc.vectors.toLocaleString()} vectors</span>
-                      <span>•</span>
-                      <span>{doc.uploadedAt}</span>
+                      <span>{doc.uploadedDate}</span>
                     </div>
                   </div>
                 </div>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </motion.div>
+              </Card>
             ))}
           </div>
-        </motion.div>
+        ) : (
+          <Card className="glass-card p-12 text-center">
+            <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground/30" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              No documents found
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              {searchQuery
+                ? "Try adjusting your search query"
+                : "Upload documents to get started"}
+            </p>
+            {!searchQuery && (
+              <Button onClick={() => setIsUploadDialogOpen(true)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Sync New Documents
+              </Button>
+            )}
+          </Card>
+        )}
       </div>
+
+      {/* Upload Dialog */}
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Sync New Documents</DialogTitle>
+            <DialogDescription>
+              Upload documents to enhance Sahayaki's knowledge base
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="relative">
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.txt,.xlsx,.xls"
+                onChange={handleFileUpload}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                id="doc-upload"
+              />
+              <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-muted/20">
+                <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
+                {uploadedFiles.length > 0 ? (
+                  <div>
+                    <p className="text-sm text-foreground font-medium mb-2">
+                      {uploadedFiles.length} file(s) selected
+                    </p>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      {uploadedFiles.map((file, index) => (
+                        <p key={index}>{file.name}</p>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-foreground font-medium mb-1">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PDF, DOC, TXT, or XLSX files
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {isUploading && (
+              <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Processing documents...
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Vectorizing and indexing for AI reference
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsUploadDialogOpen(false);
+                setUploadedFiles([]);
+              }}
+              disabled={isUploading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSync}
+              disabled={uploadedFiles.length === 0 || isUploading}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                "Sync Documents"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
-}
+};
+
+export default KnowledgeBase;

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   PhoneIncoming,
   PhoneOutgoing,
-  Play,
+  FileText,
   ArrowUpDown,
   CheckCircle,
   XCircle,
@@ -19,6 +19,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { generateMockCalls, Call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -55,8 +62,15 @@ interface CallLogsTableProps {
 export function CallLogsTable({ limit, showHeader = true }: CallLogsTableProps) {
   const [sortField, setSortField] = useState<SortField>("timestamp");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [selectedCall, setSelectedCall] = useState<Call | null>(null);
+  const [isSummaryDialogOpen, setIsSummaryDialogOpen] = useState(false);
 
   const calls = useMemo(() => generateMockCalls(limit || 10), [limit]);
+
+  const handleViewSummary = (call: Call) => {
+    setSelectedCall(call);
+    setIsSummaryDialogOpen(true);
+  };
 
   const sortedCalls = useMemo(() => {
     return [...calls].sort((a, b) => {
@@ -189,9 +203,13 @@ export function CallLogsTable({ limit, showHeader = true }: CallLogsTableProps) 
                     size="sm"
                     variant="ghost"
                     className="gap-1 text-primary hover:text-primary hover:bg-primary/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewSummary(call);
+                    }}
                   >
-                    <Play className="w-3 h-3" />
-                    Play
+                    <FileText className="w-3 h-3" />
+                    Summary
                   </Button>
                 </TableCell>
               </motion.tr>
@@ -199,6 +217,88 @@ export function CallLogsTable({ limit, showHeader = true }: CallLogsTableProps) 
           })}
         </TableBody>
       </Table>
+
+      <Dialog open={isSummaryDialogOpen} onOpenChange={setIsSummaryDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Call Summary</DialogTitle>
+            <DialogDescription>
+              Detailed summary of the conversation
+            </DialogDescription>
+          </DialogHeader>
+          {selectedCall && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted/30">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                    Caller ID
+                  </p>
+                  <p className="font-mono text-sm text-foreground">{selectedCall.callerId}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                    Call Type
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {selectedCall.type === "inbound" ? (
+                      <PhoneIncoming className="w-4 h-4 text-success" />
+                    ) : (
+                      <PhoneOutgoing className="w-4 h-4 text-primary" />
+                    )}
+                    <span className="capitalize text-sm text-foreground">
+                      {selectedCall.type}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                    Duration
+                  </p>
+                  <p className="text-sm text-foreground">{formatDuration(selectedCall.duration)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                    Outcome
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const OutcomeIcon = outcomeIcons[selectedCall.outcome].icon;
+                      return (
+                        <>
+                          <OutcomeIcon
+                            className={cn("w-4 h-4", outcomeIcons[selectedCall.outcome].className)}
+                          />
+                          <span className="capitalize text-sm text-foreground">
+                            {selectedCall.outcome}
+                          </span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                    Time
+                  </p>
+                  <p className="text-sm text-foreground">{formatDate(selectedCall.timestamp)}</p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary" />
+                  Summary
+                </h4>
+                <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                  <p className="text-sm text-foreground leading-relaxed">
+                    {selectedCall.summary || "No summary available for this call."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

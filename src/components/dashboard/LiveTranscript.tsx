@@ -11,13 +11,15 @@ interface Message {
 }
 
 const mockMessages: Omit<Message, "id" | "timestamp">[] = [
-  { role: "agent", content: "Hello! Thank you for calling TechSupport. How can I assist you today?" },
-  { role: "user", content: "Hi, I'm having trouble with my internet connection. It keeps dropping every few minutes." },
-  { role: "agent", content: "I'm sorry to hear that. Let me help you troubleshoot this issue. Can you tell me what router model you're using?" },
-  { role: "user", content: "It's a Netgear R7000. I've tried restarting it but the problem persists." },
-  { role: "agent", content: "I understand. The R7000 is a solid router. Let's check a few things. First, have you noticed if the issue happens at specific times of day?" },
-  { role: "user", content: "Yes, actually it seems worse in the evenings around 7-9 PM." },
-  { role: "agent", content: "That's helpful information. Peak usage times can cause congestion. I'd recommend we check your channel settings and possibly update your firmware." },
+  { role: "agent", content: "Please provide your name for the complaint registration." },
+  { role: "user", content: "My name is Rajesh Kumar, and this is regarding a water supply issue in our area." },
+  { role: "agent", content: "Please describe the issue in your own words." },
+  { role: "user", content: "We haven't had water supply for the past 3 days in our entire street. About 15-20 houses are affected." },
+  { role: "agent", content: "Please let me know the urgency of the issue: Low, Medium, or High?" },
+  { role: "user", content: "This is definitely High urgency. People are struggling without water for basic needs." },
+  { role: "agent", content: "Please specify the exact location of the water leakage." },
+  { role: "user", content: "It's not a leakage issue, it's a complete water supply cut in Sector 12, Dwarka, New Delhi." },
+  { role: "agent", content: "Your complaint has been registered successfully. Your ticket number is DEL-964A76." },
 ];
 
 export function LiveTranscript() {
