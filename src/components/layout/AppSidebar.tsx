@@ -7,7 +7,11 @@ import {
   Mic,
   Radio,
   ListOrdered,
-  Database
+  Database,
+  UserCog,
+  FileText,
+  MapPin,
+  Megaphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +21,10 @@ const navItems = [
   { to: "/databases", icon: Database, label: "Databases" },
   { to: "/knowledge-base", icon: BookOpen, label: "Knowledge Base" },
   { to: "/call-logs", icon: PhoneCall, label: "Call Logs" },
+  { to: "/manager-dashboard", icon: UserCog, label: "Manager Dashboard" },
+  { to: "/complaints", icon: FileText, label: "Complaints" },
+  { to: "/area-hotspots", icon: MapPin, label: "Area Hotspots" },
+  { to: "/outbound-campaigns", icon: Megaphone, label: "Campaigns" },
 ];
 
 export function AppSidebar() {

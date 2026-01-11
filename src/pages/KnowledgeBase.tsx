@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,15 +12,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Search, Plus, FileText, Upload, Loader2 } from "lucide-react";
-import { getMockDocuments, Document } from "@/lib/knowledge-base-api";
+import { getDocuments, uploadDocuments, Document } from "@/lib/api";
 import { toast } from "sonner";
 
 const KnowledgeBase = () => {
-  const [documents, setDocuments] = useState<Document[]>(getMockDocuments());
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+
+  useEffect(() => {
+    const fetchDocs = async () => {
+      setIsLoadingDocs(true);
+      const response = await getDocuments(searchQuery);
+      if (response.data) {
+        setDocuments(response.data);
+      }
+      setIsLoadingDocs(false);
+    };
+    fetchDocs();
+  }, [searchQuery]);
 
   const filteredDocuments = documents.filter((doc) =>
     doc.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -36,23 +49,22 @@ const KnowledgeBase = () => {
 
     setIsUploading(true);
 
-    // Simulate upload and processing
-    setTimeout(() => {
-      const newDocs: Document[] = uploadedFiles.map((file, index) => ({
-        id: `doc-${documents.length + index + 1}`,
-        name: file.name,
-        type: file.name.split(".").pop() as "pdf" | "doc" | "txt" | "xlsx",
-        uploadedDate: new Date().toLocaleDateString("en-US"),
-        size: file.size,
-        vectorized: true,
-      }));
+    try {
+      const response = await uploadDocuments(uploadedFiles);
 
-      setDocuments([...documents, ...newDocs]);
+      if (response.data) {
+        setDocuments([...documents, ...response.data]);
+        setIsUploadDialogOpen(false);
+        setUploadedFiles([]);
+        toast.success(`Successfully synced ${uploadedFiles.length} document(s)`);
+      } else {
+        toast.error(response.error || "Failed to upload documents");
+      }
+    } catch (error) {
+      toast.error("An error occurred during upload");
+    } finally {
       setIsUploading(false);
-      setIsUploadDialogOpen(false);
-      setUploadedFiles([]);
-      toast.success(`Successfully synced ${uploadedFiles.length} document(s)`);
-    }, 2000);
+    }
   };
 
   const getFileIcon = (type: string) => {

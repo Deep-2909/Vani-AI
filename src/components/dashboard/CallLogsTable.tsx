@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   PhoneIncoming,
@@ -9,6 +9,8 @@ import {
   XCircle,
   AlertTriangle,
   Voicemail,
+  MessageSquare,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,8 +28,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { generateMockCalls, Call } from "@/lib/api";
+import { getCalls, fetchTranscript, Call } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type SortField = "timestamp" | "duration" | "outcome";
 type SortDirection = "asc" | "desc";
@@ -64,12 +67,44 @@ export function CallLogsTable({ limit, showHeader = true }: CallLogsTableProps) 
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
   const [isSummaryDialogOpen, setIsSummaryDialogOpen] = useState(false);
+  const [calls, setCalls] = useState<Call[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [transcript, setTranscript] = useState<string | null>(null);
+  const [isLoadingTranscript, setIsLoadingTranscript] = useState(false);
 
-  const calls = useMemo(() => generateMockCalls(limit || 10), [limit]);
+  useEffect(() => {
+    const fetchCalls = async () => {
+      setIsLoading(true);
+      const response = await getCalls({ limit: limit || 20 });
+      if (response.data) {
+        setCalls(response.data);
+      }
+      setIsLoading(false);
+    };
+    fetchCalls();
+  }, [limit]);
 
-  const handleViewSummary = (call: Call) => {
+  const handleViewSummary = async (call: Call) => {
     setSelectedCall(call);
     setIsSummaryDialogOpen(true);
+    setTranscript(call.transcript || null);
+  };
+
+  const handleFetchTranscript = async (callId: string) => {
+    setIsLoadingTranscript(true);
+    console.log('Fetching transcript for call:', callId);
+
+    const response = await fetchTranscript(callId);
+    console.log('Transcript response:', response);
+
+    if (response.data) {
+      setTranscript(response.data.transcript);
+      console.log('Transcript loaded successfully');
+    } else if (response.error) {
+      console.error('Failed to fetch transcript:', response.error);
+      setTranscript(`Error: ${response.error}`);
+    }
+    setIsLoadingTranscript(false);
   };
 
   const sortedCalls = useMemo(() => {
@@ -157,7 +192,23 @@ export function CallLogsTable({ limit, showHeader = true }: CallLogsTableProps) 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedCalls.map((call, index) => {
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-muted-foreground">Loading calls...</span>
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : calls.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                No calls found
+              </TableCell>
+            </TableRow>
+          ) : (
+            sortedCalls.map((call, index) => {
             const OutcomeIcon = outcomeIcons[call.outcome].icon;
             return (
               <motion.tr
@@ -214,7 +265,8 @@ export function CallLogsTable({ limit, showHeader = true }: CallLogsTableProps) 
                 </TableCell>
               </motion.tr>
             );
-          })}
+          })
+          )}
         </TableBody>
       </Table>
 
@@ -284,17 +336,65 @@ export function CallLogsTable({ limit, showHeader = true }: CallLogsTableProps) 
                 </div>
               </div>
 
-              <div>
-                <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-primary" />
-                  Summary
-                </h4>
-                <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                  <p className="text-sm text-foreground leading-relaxed">
-                    {selectedCall.summary || "No summary available for this call."}
-                  </p>
-                </div>
-              </div>
+              <Tabs defaultValue="summary" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="summary">Summary</TabsTrigger>
+                  <TabsTrigger value="transcript">Transcript</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="summary" className="mt-4">
+                  <div>
+                    <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      Summary
+                    </h4>
+                    <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {selectedCall.summary || "No summary available for this call."}
+                      </p>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="transcript" className="mt-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-foreground flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-primary" />
+                        Transcript
+                      </h4>
+                      {!transcript && selectedCall.id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleFetchTranscript(selectedCall.id)}
+                          disabled={isLoadingTranscript}
+                        >
+                          {isLoadingTranscript ? (
+                            <>
+                              <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            "Fetch Transcript"
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="p-4 rounded-lg bg-muted/30 border border-border max-h-96 overflow-y-auto">
+                      {transcript ? (
+                        <div className="space-y-3 text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                          {transcript}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          No transcript available. Click "Fetch Transcript" to load from Retell.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           )}
         </DialogContent>

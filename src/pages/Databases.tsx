@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,24 +12,51 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Database, Trash2, Plus } from "lucide-react";
-import { getMockDatabaseSources, DatabaseSource } from "@/lib/database-api";
+import { getDatabaseSources, syncDatabaseSource, DatabaseSource } from "@/lib/api";
 import { LinkDataSourceDialog } from "@/components/databases/LinkDataSourceDialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const Databases = () => {
-  const [databases, setDatabases] = useState<DatabaseSource[]>(getMockDatabaseSources());
+  const [databases, setDatabases] = useState<DatabaseSource[]>([]);
   const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSources = async () => {
+      setIsLoading(true);
+      const response = await getDatabaseSources();
+      if (response.data) {
+        setDatabases(response.data);
+      }
+      setIsLoading(false);
+    };
+    fetchSources();
+  }, []);
 
   const handleDeleteDatabase = (id: string) => {
     setDatabases((prev) => prev.filter((db) => db.id !== id));
     toast.success("Database source removed successfully");
   };
 
-  const handleSyncSource = (data: any) => {
-    console.log("Syncing data source:", data);
-    // Here you would typically send this to your backend
-    toast.success(`Successfully synced ${data.datasetName} with Sahayaki!`);
+  const handleSyncSource = async (data: any) => {
+    const response = await syncDatabaseSource(
+      data.datasetName,
+      data.sourceType,
+      data.connectionString
+    );
+
+    if (response.data) {
+      toast.success(`Successfully synced ${data.datasetName} with Sahayaki!`);
+      // Refresh the list
+      const sourcesResponse = await getDatabaseSources();
+      if (sourcesResponse.data) {
+        setDatabases(sourcesResponse.data);
+      }
+    } else {
+      toast.error(response.error || "Failed to sync database");
+    }
+
     setIsConnectDialogOpen(false);
   };
 

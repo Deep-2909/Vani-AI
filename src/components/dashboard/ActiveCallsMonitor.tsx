@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Radio, CheckCircle, MapPin, FileText, MessageSquare } from "lucide-react";
 import { SentimentGauge } from "./SentimentGauge";
 import { LiveTranscript } from "./LiveTranscript";
+import { connectToActiveCalls } from "@/lib/api";
 
 interface ActionTaken {
   id: string;
@@ -65,12 +66,6 @@ interface ActiveCall {
   status: "active" | "on-hold" | "transferring";
 }
 
-const mockActiveCalls: ActiveCall[] = [
-  { id: "1", callerId: "+91-9876543210", type: "inbound", duration: 285, sentiment: 78, status: "active" },
-  { id: "2", callerId: "+1 (555) 987-6543", type: "outbound", duration: 128, sentiment: 45, status: "active" },
-  { id: "3", callerId: "+1 (555) 456-7890", type: "inbound", duration: 67, sentiment: 88, status: "on-hold" },
-];
-
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -78,13 +73,31 @@ function formatDuration(seconds: number): string {
 }
 
 export function ActiveCallsMonitor() {
-  const [selectedCall, setSelectedCall] = useState<ActiveCall>(mockActiveCalls[0]);
-  const [sentiment, setSentiment] = useState(78); // Static sentiment for demo
+  const [activeCalls, setActiveCalls] = useState<ActiveCall[]>([]);
+  const [selectedCall, setSelectedCall] = useState<ActiveCall | null>(null);
+  const [sentiment, setSentiment] = useState(0);
 
-  // Static sentiment - no random updates for demo
   useEffect(() => {
-    setSentiment(78); // Final sentiment: Satisfied after complaint resolution
+    // Connect to WebSocket for real-time updates
+    const ws = connectToActiveCalls((calls) => {
+      setActiveCalls(calls);
+      if (calls.length > 0 && !selectedCall) {
+        setSelectedCall(calls[0]);
+        setSentiment(calls[0].sentiment || 0);
+      }
+    });
+
+    return () => {
+      ws.close();
+    };
   }, []);
+
+  // Update sentiment when selected call changes
+  useEffect(() => {
+    if (selectedCall) {
+      setSentiment(selectedCall.sentiment || 0);
+    }
+  }, [selectedCall]);
 
   return (
     <motion.div
@@ -111,15 +124,26 @@ export function ActiveCallsMonitor() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Transcript */}
-        <div className="bg-muted/20 rounded-xl border border-border">
-          <div className="p-4 border-b border-border">
-            <p className="text-sm font-medium text-foreground">Live Transcript</p>
-            <p className="text-xs text-muted-foreground">{selectedCall.callerId}</p>
-          </div>
-          <LiveTranscript />
+      {activeCalls.length === 0 ? (
+        <div className="text-center py-12">
+          <Radio className="w-16 h-16 mx-auto mb-4 text-muted-foreground/30" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            No Active Calls
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Waiting for incoming or outbound calls...
+          </p>
         </div>
+      ) : selectedCall ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Transcript */}
+          <div className="bg-muted/20 rounded-xl border border-border">
+            <div className="p-4 border-b border-border">
+              <p className="text-sm font-medium text-foreground">Live Transcript</p>
+              <p className="text-xs text-muted-foreground">{selectedCall.callerId}</p>
+            </div>
+            <LiveTranscript />
+          </div>
 
         {/* Action Taken Panel */}
         <div className="bg-muted/20 rounded-xl border border-border">
@@ -203,7 +227,8 @@ export function ActiveCallsMonitor() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      ) : null}
     </motion.div>
   );
 }

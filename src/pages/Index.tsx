@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
   Info,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getAgentConfig, updateAgentConfig, startInboundAgent, startOutboundCalling } from "@/lib/api";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -43,17 +44,52 @@ const Index = () => {
     complainTicket: false,
   });
 
-  const handleToggleTool = (tool: keyof typeof tools) => {
-    setTools({ ...tools, [tool]: !tools[tool] });
-    toast.success(`${tool} tool ${!tools[tool] ? "enabled" : "disabled"}`);
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const response = await getAgentConfig();
+      if (response.data) {
+        setAgentName(response.data.agentName);
+        setAgentDescription(response.data.agentDescription);
+        setTools({
+          knowledgeQuery: response.data.tools.knowledgeQuery,
+          endCall: response.data.tools.endCall,
+          complainTicket: response.data.tools.complainTicket,
+        });
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  const handleToggleTool = async (tool: keyof typeof tools) => {
+    const newValue = !tools[tool];
+    setTools({ ...tools, [tool]: newValue });
+
+    // Save to backend
+    await updateAgentConfig({
+      tools: { ...tools, [tool]: newValue }
+    });
+
+    toast.success(`${tool} tool ${newValue ? "enabled" : "disabled"}`);
   };
 
-  const handleStartOutbound = () => {
+  const handleStartOutbound = async () => {
     toast.info("Starting outbound calling...");
+    const response = await startOutboundCalling();
+    if (response.data) {
+      toast.success(response.data.message);
+    } else {
+      toast.error(response.error || "Failed to start outbound calling");
+    }
   };
 
-  const handleStartInbound = () => {
+  const handleStartInbound = async () => {
     toast.info("Starting inbound agent...");
+    const response = await startInboundAgent();
+    if (response.data) {
+      toast.success(response.data.message);
+    } else {
+      toast.error(response.error || "Failed to start inbound agent");
+    }
   };
 
   return (

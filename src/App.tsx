@@ -9,6 +9,10 @@ import CallLogs from "./pages/CallLogs";
 import CallingList from "./pages/CallingList";
 import Databases from "./pages/Databases";
 import KnowledgeBase from "./pages/KnowledgeBase";
+import ManagerDashboard from "./pages/ManagerDashboard";
+import Complaints from "./pages/Complaints";
+import AreaHotspots from "./pages/AreaHotspots";
+import OutboundCampaigns from "./pages/OutboundCampaigns";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +30,10 @@ const App = () => (
             <Route path="/calling-list" element={<CallingList />} />
             <Route path="/databases" element={<Databases />} />
             <Route path="/knowledge-base" element={<KnowledgeBase />} />
+            <Route path="/manager-dashboard" element={<ManagerDashboard />} />
+            <Route path="/complaints" element={<Complaints />} />
+            <Route path="/area-hotspots" element={<AreaHotspots />} />
+            <Route path="/outbound-campaigns" element={<OutboundCampaigns />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

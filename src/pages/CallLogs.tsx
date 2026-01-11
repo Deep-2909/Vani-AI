@@ -1,13 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, Download, Calendar } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { CallLogsTable } from "@/components/dashboard/CallLogsTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getCalls } from "@/lib/api";
 
 export default function CallLogs() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [stats, setStats] = useState({
+    total: 0,
+    inbound: 0,
+    outbound: 0,
+    avgDuration: "0:00"
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const response = await getCalls({ limit: 1000 });
+      if (response.data) {
+        const calls = response.data;
+        const inbound = calls.filter(c => c.type === 'inbound').length;
+        const outbound = calls.filter(c => c.type === 'outbound').length;
+        const totalDuration = calls.reduce((sum, c) => sum + c.duration, 0);
+        const avgSeconds = calls.length > 0 ? Math.floor(totalDuration / calls.length) : 0;
+        const avgMins = Math.floor(avgSeconds / 60);
+        const avgSecs = avgSeconds % 60;
+
+        setStats({
+          total: calls.length,
+          inbound,
+          outbound,
+          avgDuration: `${avgMins}:${avgSecs.toString().padStart(2, '0')}`
+        });
+      }
+    };
+    fetchStats();
+  }, []);
 
   return (
     <DashboardLayout>
@@ -70,11 +100,11 @@ export default function CallLogs() {
           className="grid grid-cols-2 md:grid-cols-4 gap-4"
         >
           {[
-            { label: "Total", value: "2,847", color: "text-foreground" },
-            { label: "Inbound", value: "1,923", color: "text-success" },
-            { label: "Outbound", value: "924", color: "text-primary" },
-            { label: "Avg Duration", value: "4:32", color: "text-warning" },
-          ].map((stat, index) => (
+            { label: "Total", value: stats.total.toString(), color: "text-foreground" },
+            { label: "Inbound", value: stats.inbound.toString(), color: "text-success" },
+            { label: "Outbound", value: stats.outbound.toString(), color: "text-primary" },
+            { label: "Avg Duration", value: stats.avgDuration, color: "text-warning" },
+          ].map((stat) => (
             <div
               key={stat.label}
               className="glass-card p-4 text-center"
