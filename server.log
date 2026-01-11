@@ -1,0 +1,64 @@
+INFO:     Will watch for changes in these directories: ['/Users/deepanshu/Desktop/DP_VANI/Vani-AI']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [71226] using WatchFiles
+INFO:     Started server process [71229]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64016 - "GET /api/calls?limit=2 HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'add_call_duration_column.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [71229]
+INFO:     Started server process [71254]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/api/api_bridge.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [71254]
+INFO:     Started server process [71279]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64158 - "GET /api/calls?limit=1 HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'app/api/retell_webhook.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [71279]
+INFO:     Started server process [71382]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [71382]
+WARNING:  WatchFiles detected changes in 'main.py'. Reloading...
+INFO:     Started server process [71402]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Started server process [71420]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [71420]
+WARNING:  WatchFiles detected changes in 'main.py'. Reloading...
+INFO:     Started server process [71456]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Started server process [71466]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/api/api_bridge.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [71466]
+INFO:     Started server process [71489]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

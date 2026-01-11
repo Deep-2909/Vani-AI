@@ -79,6 +79,33 @@ def get_multilingual_greeting(language: str = "english") -> str:
     return greetings.get(language, greetings["english"])
 
 
+def format_conversation_transcript(conversation_history: list) -> str:
+    """
+    Format conversation history into a readable transcript.
+    Similar to Retell's transcript format.
+    """
+    formatted_lines = []
+
+    for entry in conversation_history:
+        role = entry.get("role", "unknown")
+        content = entry.get("content", "").strip()
+
+        if not content:
+            continue
+
+        # Map roles to readable labels
+        if role == "assistant":
+            speaker = "🤖 Agent"
+        elif role == "user":
+            speaker = "👤 User"
+        else:
+            speaker = f"❓ {role.capitalize()}"
+
+        formatted_lines.append(f"{speaker}: {content}")
+
+    return "\n\n".join(formatted_lines)
+
+
 @router.websocket("/llm-websocket/call_{call_id}")
 async def retell_llm_ws(websocket: WebSocket, call_id: str):
     """
@@ -195,15 +222,21 @@ async def retell_llm_ws(websocket: WebSocket, call_id: str):
                             print(f"   Department: {args.get('department')}")
                             print(f"   Language: {response_language}")
 
+                            # Format the conversation transcript
+                            formatted_transcript = format_conversation_transcript(
+                                CONVERSATION_HISTORY.get(call_id, [])
+                            )
+                            print(f"   Transcript length: {len(formatted_transcript)} chars")
+
                             with engine.begin() as conn:
                                 # Insert complaint
                                 conn.execute(
                                     text("""
-                                        INSERT INTO grievances 
+                                        INSERT INTO grievances
                                         (ticket_id, citizen_name, contact, description, location, area,
-                                         department, category, priority, status, call_id, language)
+                                         department, category, priority, status, call_id, language, retell_call_id, transcript)
                                         VALUES (:ticket_id, :name, :contact, :issue, :location, :area,
-                                                :dept, :category, :priority, :status, :call_id, :language)
+                                                :dept, :category, :priority, :status, :call_id, :language, :retell_call_id, :transcript)
                                     """),
                                     {
                                         "ticket_id": ticket_id,
@@ -217,7 +250,9 @@ async def retell_llm_ws(websocket: WebSocket, call_id: str):
                                         "priority": args.get("priority", "Medium"),
                                         "status": "OPEN",
                                         "call_id": call_id,
-                                        "language": response_language
+                                        "language": response_language,
+                                        "retell_call_id": call_id,  # Save Retell call ID
+                                        "transcript": formatted_transcript  # Save conversation transcript
                                     }
                                 )
 

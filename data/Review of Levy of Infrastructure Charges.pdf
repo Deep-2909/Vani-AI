@@ -1,0 +1,30 @@
+<?hda version="11.1.1.9.0-2015-04-14 07:19:29Z-r126792" jcharset="UTF8" encoding="utf-8"?>
+@Properties LocalData
+ClientEncoding=UTF-8
+IdcService=GET_FILE
+IsJava=1
+IsQueryObjectPersistent=
+NoHttpHeaders=0
+Rendition=primary
+StatusCode=-32
+StatusMessage=Error accessing file 'Review of Levy of Infrastructure Charges.pdf' for download. The error was caused by an internally generated issue. The error has been logged.
+StatusMessageKey=!csErrorAccessingForDownload,Review of Levy of Infrastructure Charges.pdf!csUnprivilegedSystemError
+UseForwardOnlyCursor=
+UserDateFormat=iso8601
+UserTimeZone=UTC
+accessedDocInfoCache=
+blDateFormat=yyyy-MM-dd HH:mm:ssZ!tUTC!mAM,PM
+blFieldTypes=dCreateDate date,dDocCreatedDate date,dReleaseDate date,dInDate date,StatusMessage message,dDocLastModifiedDate date,dOutDate date
+changedMonikers=
+changedSubjects=
+dDocName=DJBRMS49531811
+dDocType=DOCUMENT
+dExtension=pdf
+dID=49222040
+dUser=weblogic
+idcToken=
+localizedForResponse=1
+refreshMonikers=
+refreshSubMonikers=
+refreshSubjects=
+@end
