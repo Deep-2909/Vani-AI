@@ -11,12 +11,13 @@ import json
 import uuid
 from datetime import datetime
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from sqlalchemy import text
+from sqlalchemy import text, func
 from app.services.rag import RAGService
 from app.services.llm import get_ai_response, detect_language
 from app.services.area_hotspot import update_area_hotspot
 from app.db import engine
 from app.ws import manager
+from app.models.grievance import Grievance
 
 router = APIRouter()
 rag_service = RAGService()
@@ -24,6 +25,27 @@ rag_service = RAGService()
 # Store conversation history and language per call
 CONVERSATION_HISTORY = {}
 DETECTED_LANGUAGE = {}
+LANGUAGE_SELECTED = {}  # New: Track if language has been explicitly selected
+
+
+def generate_ticket_id() -> str:
+    """
+    Generate a sequential ticket ID in format: DEL-YYYYMMDD-XXXX
+    Example: DEL-20240112-0001
+    """
+    today_str = datetime.now().strftime("%Y%m%d")
+    prefix = f"DEL-{today_str}"
+    
+    with engine.connect() as conn:
+        # Count tickets created today
+        query = text(f"SELECT COUNT(*) FROM grievances WHERE ticket_id LIKE '{prefix}%'")
+        result = conn.execute(query).scalar()
+        
+        # Increment count
+        sequence = result + 1
+        
+        # Format: DEL-20240112-0042
+        return f"{prefix}-{sequence:04d}"
 
 
 def normalize_ticket_id(ticket_id: str) -> str:
@@ -117,11 +139,12 @@ async def retell_llm_ws(websocket: WebSocket, call_id: str):
 
     # Initialize conversation history and language
     CONVERSATION_HISTORY[call_id] = []
-    DETECTED_LANGUAGE[call_id] = "english"  # Default until detected
+    DETECTED_LANGUAGE[call_id] = "english"  # Default
+    LANGUAGE_SELECTED[call_id] = False      # Not yet selected
 
     try:
-        # Send initial greeting (in English, will adapt after first message)
-        greeting = "Namaste, I am Vani from the Delhi Government. How can I help you today?"
+        # Send initial greeting (Ask for language)
+        greeting = "Namaste. Welcome to Delhi Government Grievance Portal. Please tell me your preferred language: Hindi, English, or Punjabi?"
         
         await websocket.send_json({
             "response_id": 0,
@@ -162,11 +185,50 @@ async def retell_llm_ws(websocket: WebSocket, call_id: str):
 
                 print(f"\n🗣️ USER SAID: {user_text}")
 
-                # Detect language from first user message
-                if len(CONVERSATION_HISTORY[call_id]) <= 1:
-                    detected_lang = detect_language(user_text)
-                    DETECTED_LANGUAGE[call_id] = detected_lang
-                    print(f"🌍 Language detected: {detected_lang}")
+                # ===================================================================
+                # HANDLE LANGUAGE SELECTION (First interaction)
+                # ===================================================================
+                if not LANGUAGE_SELECTED.get(call_id, False):
+                    user_text_lower = user_text.lower()
+                    selected_lang = None
+                    
+                    if "hindi" in user_text_lower:
+                        selected_lang = "hindi"
+                        response_text = "Theek hai, main Hindi mein baat karungi. Kripya batayein main aapki kaise madad kar sakti hoon?"
+                    elif "punjabi" in user_text_lower:
+                        selected_lang = "punjabi"
+                        response_text = "Theek hai, main Punjabi vich gal karangi. Main tuhadi ki madad kar sakdi haan?"
+                    elif "english" in user_text_lower:
+                        selected_lang = "english"
+                        response_text = "Sure, I will speak in English. How can I help you today?"
+                    
+                    if selected_lang:
+                        # Language confirmed
+                        DETECTED_LANGUAGE[call_id] = selected_lang
+                        LANGUAGE_SELECTED[call_id] = True
+                        print(f"✅ Language selected: {selected_lang}")
+                    else:
+                        # Language not recognized, ask again
+                        response_text = "Maaf kijiye/Sorry. Please say Hindi, English, or Punjabi."
+                        print(f"⚠️ Language not recognized in: {user_text}")
+
+                    # Send immediate response without LLM
+                    await websocket.send_json({
+                        "response_id": response_id,
+                        "content": response_text,
+                        "content_complete": True,
+                        "end_call": False
+                    })
+                    
+                    CONVERSATION_HISTORY[call_id].append({
+                        "role": "assistant",
+                        "content": response_text
+                    })
+                    continue
+
+                # ===================================================================
+                # NORMAL CONVERSATION FLOW (After language selection)
+                # ===================================================================
 
                 # Add to history
                 CONVERSATION_HISTORY[call_id].append({
@@ -190,10 +252,10 @@ async def retell_llm_ws(websocket: WebSocket, call_id: str):
 
                 spoken_text = ai_response.get("content", "").strip()
                 tool_calls = ai_response.get("tool_calls", [])
-                response_language = ai_response.get("detected_language", DETECTED_LANGUAGE[call_id])
+                response_language = DETECTED_LANGUAGE[call_id]  # Stick to selected language
 
-                # Update language if changed
-                DETECTED_LANGUAGE[call_id] = response_language
+                # Update language if changed (NOT needed anymore as we lock it)
+                # DETECTED_LANGUAGE[call_id] = response_language
 
                 # ===================================================================
                 # HANDLE TOOL CALLS
@@ -209,7 +271,7 @@ async def retell_llm_ws(websocket: WebSocket, call_id: str):
                         # TOOL 1: REGISTER GRIEVANCE
                         # ---------------------------------------------------------------
                         if tool_name == "register_grievance":
-                            ticket_id = f"DEL-{uuid.uuid4().hex[:6].upper()}"
+                            ticket_id = generate_ticket_id()
 
                             print(f"\n📝 REGISTERING GRIEVANCE:")
                             print(f"   Ticket ID: {ticket_id}")
@@ -689,4 +751,5 @@ async def retell_llm_ws(websocket: WebSocket, call_id: str):
         # Cleanup
         CONVERSATION_HISTORY.pop(call_id, None)
         DETECTED_LANGUAGE.pop(call_id, None)
+        LANGUAGE_SELECTED.pop(call_id, None)
         print(f"🧹 Cleaned up call state for {call_id}")

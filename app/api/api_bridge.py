@@ -734,7 +734,8 @@ async def get_database_sources():
                         DATE(created_at) as date,
                         citizen_name,
                         description,
-                        department
+                        department,
+                        ticket_id
                     FROM grievances
                     ORDER BY created_at DESC
                     LIMIT 50
@@ -747,7 +748,8 @@ async def get_database_sources():
                     "date": row[0].strftime("%d %b") if row[0] else "",
                     "nameOfPerson": row[1] or "Unknown",
                     "descriptionOfComplain": row[2] or "",
-                    "department": row[3] or "General"
+                    "department": row[3] or "General",
+                    "ticketId": row[4] or "N/A"
                 }
                 for i, row in enumerate(result)
             ]
@@ -759,7 +761,7 @@ async def get_database_sources():
                 "status": "active",
                 "recordCount": len(complaint_data),
                 "lastSync": datetime.now().isoformat(),
-                "columns": ["DATE", "NAME OF PERSON", "DESCRIPTION OF COMPLAIN", "DEPARTMENT"],
+                "columns": ["TICKET ID", "DATE", "NAME OF PERSON", "DESCRIPTION OF COMPLAIN", "DEPARTMENT"],
                 "data": complaint_data
             }]
             
