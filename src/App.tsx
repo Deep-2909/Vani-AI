@@ -31,7 +31,6 @@ const App = () => (
             <Route path="/databases" element={<Databases />} />
             <Route path="/knowledge-base" element={<KnowledgeBase />} />
             <Route path="/manager-dashboard" element={<ManagerDashboard />} />
-            <Route path="/complaints" element={<Complaints />} />
             <Route path="/area-hotspots" element={<AreaHotspots />} />
             <Route path="/outbound-campaigns" element={<OutboundCampaigns />} />
             <Route path="*" element={<NotFound />} />

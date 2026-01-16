@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -18,25 +16,14 @@ import {
 import {
   Phone,
   PhoneIncoming,
-  Settings as SettingsIcon,
-  Edit2,
-  UserPlus,
   Upload,
   Database,
-  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getAgentConfig, updateAgentConfig, startInboundAgent, startOutboundCalling } from "@/lib/api";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [agentName, setAgentName] = useState("Voice AI");
-  const [agentDescription, setAgentDescription] = useState(
-    "Voice AI is an AI voice agent serving jhh to help people through voice interactions and knowledge access."
-  );
-
   // Tool toggles
   const [tools, setTools] = useState({
     knowledgeQuery: false,
@@ -48,8 +35,6 @@ const Index = () => {
     const fetchConfig = async () => {
       const response = await getAgentConfig();
       if (response.data) {
-        setAgentName(response.data.agentName);
-        setAgentDescription(response.data.agentDescription);
         setTools({
           knowledgeQuery: response.data.tools.knowledgeQuery,
           endCall: response.data.tools.endCall,
@@ -115,117 +100,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* User Details */}
-        <Card className="glass-card p-6">
-          <h3 className="text-xl font-semibold text-primary mb-4">User Details</h3>
-          <div className="grid grid-cols-3 gap-8">
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Category</p>
-              <p className="text-base font-medium text-foreground">Company</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Department/Body</p>
-              <p className="text-base font-medium text-foreground">jhh</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Account Type</p>
-              <p className="text-base font-medium text-foreground">Demo Account</p>
-            </div>
-          </div>
-        </Card>
 
-        {/* AI Customization */}
-        <Card className="glass-card p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <SettingsIcon className="w-5 h-5 text-primary" />
-            <h3 className="text-xl font-semibold text-primary">AI Customization</h3>
-          </div>
-
-          {/* AI Agent Name */}
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-3">AI Agent Name</p>
-              {isEditingName ? (
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={agentName}
-                    onChange={(e) => setAgentName(e.target.value)}
-                    className="max-w-md"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setIsEditingName(false);
-                      toast.success("Agent name updated");
-                    }}
-                  >
-                    Save
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <p className="text-lg font-medium text-foreground">{agentName}</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsEditingName(true)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Agent Description */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-3">Agent Description</p>
-              {isEditingDescription ? (
-                <div className="space-y-2">
-                  <Textarea
-                    value={agentDescription}
-                    onChange={(e) => setAgentDescription(e.target.value)}
-                    rows={3}
-                    className="resize-none"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setIsEditingDescription(false);
-                      toast.success("Description updated");
-                    }}
-                  >
-                    Save
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg">
-                  <p className="text-sm text-foreground flex-1">{agentDescription}</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsEditingDescription(true)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Human-in-the-Loop Escalation */}
-            <div className="pt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <p className="text-sm text-muted-foreground">Human-in-the-Loop Escalation</p>
-                <Info className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                <UserPlus className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Add Human Expert</p>
-              </div>
-            </div>
-          </div>
-        </Card>
 
         {/* Upload Documents */}
         <Card className="glass-card p-6">

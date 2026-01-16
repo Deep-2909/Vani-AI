@@ -124,9 +124,9 @@ const Complaints = () => {
   };
 
   const filteredComplaints = complaints.filter((c) =>
-    c.citizen_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.ticket_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    (c.citizen_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (c.ticket_id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (c.description || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

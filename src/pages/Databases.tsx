@@ -67,14 +67,9 @@ const Databases = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Databases</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage live datasets and scheme information for Sahayaki AI.
-            </p>
+            Manage live datasets and scheme information for Vani AI.
           </div>
-          <Button onClick={() => setIsConnectDialogOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Connect New Source
-          </Button>
+
         </div>
 
         {/* Database Sources */}
@@ -143,6 +138,9 @@ const Databases = () => {
                           key={record.id}
                           className="border-border hover:bg-muted/30 transition-colors"
                         >
+                          <TableCell className="text-sm font-medium text-foreground">
+                            {record.ticketId}
+                          </TableCell>
                           <TableCell className="text-sm text-foreground">
                             {record.date}
                           </TableCell>

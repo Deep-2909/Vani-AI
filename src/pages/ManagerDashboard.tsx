@@ -35,35 +35,35 @@ const ManagerDashboard = () => {
 
   const statCards = stats
     ? [
-        {
-          label: "Open Complaints",
-          value: stats.total_open_complaints,
-          icon: AlertTriangle,
-          color: "text-warning",
-          bgColor: "bg-warning/10",
-        },
-        {
-          label: "Resolved",
-          value: stats.total_resolved_complaints,
-          icon: CheckCircle,
-          color: "text-success",
-          bgColor: "bg-success/10",
-        },
-        {
-          label: "Active Hotspots",
-          value: stats.active_hotspots,
-          icon: MapPin,
-          color: "text-destructive",
-          bgColor: "bg-destructive/10",
-        },
-        {
-          label: "Avg Resolution Time",
-          value: `${Math.round(stats.avg_resolution_hours)}h`,
-          icon: Clock,
-          color: "text-primary",
-          bgColor: "bg-primary/10",
-        },
-      ]
+      {
+        label: "Open Complaints",
+        value: stats.total_open_complaints,
+        icon: AlertTriangle,
+        color: "text-warning",
+        bgColor: "bg-warning/10",
+      },
+      {
+        label: "Resolved",
+        value: stats.total_resolved_complaints,
+        icon: CheckCircle,
+        color: "text-success",
+        bgColor: "bg-success/10",
+      },
+      {
+        label: "Active Hotspots",
+        value: stats.active_hotspots,
+        icon: MapPin,
+        color: "text-destructive",
+        bgColor: "bg-destructive/10",
+      },
+      {
+        label: "Avg Resolution Time",
+        value: `${Math.round(stats.avg_resolution_hours)}h`,
+        icon: Clock,
+        color: "text-primary",
+        bgColor: "bg-primary/10",
+      },
+    ]
     : [];
 
   return (
@@ -149,13 +149,12 @@ const ManagerDashboard = () => {
                   <div key={priority} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div
-                        className={`w-3 h-3 rounded-full ${
-                          priority === "CRITICAL"
+                        className={`w-3 h-3 rounded-full ${priority === "CRITICAL"
                             ? "bg-destructive"
                             : priority === "HIGH"
-                            ? "bg-warning"
-                            : "bg-success"
-                        }`}
+                              ? "bg-warning"
+                              : "bg-success"
+                          }`}
                       />
                       <span className="text-sm text-foreground capitalize">{priority.toLowerCase()}</span>
                     </div>
@@ -192,17 +191,7 @@ const ManagerDashboard = () => {
           <Card className="glass-card p-6">
             <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button
-                onClick={() => navigate("/complaints")}
-                variant="outline"
-                className="h-auto py-4 flex flex-col items-center gap-2"
-              >
-                <FileText className="w-6 h-6" />
-                <div className="text-center">
-                  <p className="font-semibold">Manage Complaints</p>
-                  <p className="text-xs text-muted-foreground">View and resolve complaints</p>
-                </div>
-              </Button>
+
 
               <Button
                 onClick={() => navigate("/area-hotspots")}

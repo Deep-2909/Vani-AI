@@ -144,7 +144,7 @@ export const LinkDataSourceDialog = ({
             <div>
               <DialogTitle className="text-2xl">Link Data Source</DialogTitle>
               <DialogDescription className="text-base">
-                Empower Sahayaki with live external data
+                Empower Vani AI with live external data
               </DialogDescription>
             </div>
           </div>
@@ -353,7 +353,7 @@ export const LinkDataSourceDialog = ({
                     Read Access
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Allow Sahayaki to query this for knowledge.
+                    Allow Vani AI to query this for knowledge.
                   </p>
                 </div>
               </div>
@@ -371,7 +371,7 @@ export const LinkDataSourceDialog = ({
                     className={cn(
                       "font-semibold cursor-pointer",
                       (selectedType === "excel" || selectedType === "csv") &&
-                        "text-muted-foreground"
+                      "text-muted-foreground"
                     )}
                   >
                     Write Access (Append)
@@ -398,7 +398,7 @@ export const LinkDataSourceDialog = ({
             disabled={!isFormValid()}
             className="uppercase px-8"
           >
-            Sync with Sahayaki
+            Sync with Vani AI
           </Button>
         </div>
       </DialogContent>

@@ -79,7 +79,7 @@ const KnowledgeBase = () => {
           <div>
             <h1 className="text-3xl font-bold text-primary">Knowledge Base</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Manage and preview documents used by Sahayaki for AI reference
+              Manage and preview documents used by Vani AI for AI reference
             </p>
           </div>
           <Button onClick={() => setIsUploadDialogOpen(true)} className="gap-2">
@@ -155,7 +155,7 @@ const KnowledgeBase = () => {
           <DialogHeader>
             <DialogTitle>Sync New Documents</DialogTitle>
             <DialogDescription>
-              Upload documents to enhance Sahayaki's knowledge base
+              Upload documents to enhance Vani AI's knowledge base
             </DialogDescription>
           </DialogHeader>
 

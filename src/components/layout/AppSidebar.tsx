@@ -11,7 +11,8 @@ import {
   UserCog,
   FileText,
   MapPin,
-  Megaphone
+  Megaphone,
+  AudioWaveform
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,6 @@ const navItems = [
   { to: "/knowledge-base", icon: BookOpen, label: "Knowledge Base" },
   { to: "/call-logs", icon: PhoneCall, label: "Call Logs" },
   { to: "/manager-dashboard", icon: UserCog, label: "Manager Dashboard" },
-  { to: "/complaints", icon: FileText, label: "Complaints" },
   { to: "/area-hotspots", icon: MapPin, label: "Area Hotspots" },
   { to: "/outbound-campaigns", icon: Megaphone, label: "Campaigns" },
 ];
@@ -36,10 +36,10 @@ export function AppSidebar() {
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <Mic className="w-5 h-5 text-primary-foreground" />
+            <AudioWaveform className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-semibold text-foreground">Voice AI</h1>
+            <h1 className="font-semibold text-foreground">Vani AI</h1>
             <p className="text-xs text-muted-foreground">Command Center</p>
           </div>
         </div>
